@@ -1,12 +1,12 @@
-export interface EthereumPubSubResult<T> {
+export interface SolanaPubSubResult<T> {
   subscription: number;
   result: T;
 }
 
-export interface EthereumPubSubMessage<T> {
+export interface SolanaPubSubMessage<T> {
   jsonrpc: string;
   method: string;
-  params: EthereumPubSubResult<T>;
+  params: SolanaPubSubResult<T>;
 }
 
 export interface Reward {

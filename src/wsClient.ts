@@ -1,7 +1,7 @@
 import WebSocket from "ws";
-import { Transaction, EthereumPubSubMessage } from "./types";
-
-const TOKEN = "Your Token Here!";
+import bs58 from "bs58";
+import { Transaction, SolanaPubSubMessage } from "./types";
+import { RAYDUIM_PROGRAM_ID, TOKEN, TOKEN_PROGRAM_ID } from "./config";
 
 const wsUrl = `wss://api.syndica.io/api-token/${TOKEN}`;
 const ws_transactions: WebSocket = new WebSocket(wsUrl);
@@ -22,7 +22,7 @@ ws_transactions.on("open", function open(): void {
         verified: false,
         filter: {
           accountKeys: {
-            all: ["675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"],
+            all: [RAYDUIM_PROGRAM_ID],
           },
         },
       },
@@ -41,8 +41,7 @@ ws_transactions.on("message", function incoming(data: WebSocket.Data): void {
     console.log("transaction subscription result", JSON.parse(data.toString()));
   } else {
     try {
-      const parsedMessage: EthereumPubSubMessage<Transaction.TransactionWrite> =
-        JSON.parse(data.toString());
+      const parsedMessage: SolanaPubSubMessage<Transaction.TransactionWrite> = JSON.parse(data.toString());
 
       // Extract the data
       const { subscription, result } = parsedMessage.params;
@@ -51,29 +50,59 @@ ws_transactions.on("message", function incoming(data: WebSocket.Data): void {
       // Access the signature & slot from the transaction
       const signature = context.signature;
       const slot = value.slot;
-      console.log(`Received transaction with signature: ${signature}`);
+      console.log(`Received transaction with signature: https://solscan.io/tx/${signature}`);
       console.log(`Transaction slot: ${slot}`);
 
       // Access the transaction body
       const transaction = value.transaction;
-      if (transaction && transaction.message) {
+      const meta = value.meta;
+
+      if (transaction && transaction.message && meta) {
         const messageHash = transaction.messageHash;
+        const preTokenBalances = meta.preTokenBalances;
+        const postTokenBalances = meta.postTokenBalances;
         console.log(`Message hash: ${messageHash}`);
 
         const message = transaction.message;
-
-        // Access the instructions array & print each out
         const instructions = message.instructions;
-        console.log(`Number of instructions: ${instructions.length}`);
-        instructions.forEach((instruction, index) => {
-          console.log(` Instruction ${index + 1}:`);
-          console.log(`   Program ID Index: ${instruction.programIdIndex}`);
-          console.log(`   Accounts: ${instruction.accounts.join(", ")}`);
-          console.log(`   Data: ${instruction.data}`);
-        });
+        const innerInstructions = meta.innerInstructions;
+        const accountKeys = transaction.message?.accountKeys;
+
+        for (const innerInstruction of innerInstructions) {
+          const instruction = instructions[innerInstruction.index];
+          const innerInstructionProgram = accountKeys[instruction.programIdIndex];
+          if (innerInstructionProgram == RAYDUIM_PROGRAM_ID) {
+            console.log(`Raydium Tx: ${innerInstruction.index} program: ${innerInstructionProgram}`);
+            for (const ix of innerInstruction.instructions) {
+              const innerInstructionProgram = accountKeys[ix.programIdIndex];
+              if (innerInstructionProgram == TOKEN_PROGRAM_ID) {
+                const decodedData = bs58.decode(ix.data);
+                const instructionTag = decodedData[0];
+                let rest = decodedData.slice(1);
+
+                let dstToken = postTokenBalances.find((x: { accountIndex: any }) => x.accountIndex == ix.accounts[1]);
+                if (!dstToken) {
+                  dstToken = preTokenBalances.find((x: { accountIndex: any }) => x.accountIndex == ix.accounts[0]);
+                }
+
+                if (instructionTag === 3) {
+                  // byte array -> u64
+                  let u64_amount = 0;
+                  for (let i = 0; i < 8; i++) {
+                    let v = rest[i];
+                    u64_amount += v * 2 ** (8 * i);
+                  }
+                  // Print the transfer token and amount
+                  console.log(`  Transfer: ${dstToken?.mint}  amount: ${u64_amount}`);
+                }
+              }
+            }
+          }
+        }
       } else {
         console.log("Transaction or message is undefined.");
       }
+      console.log("---------------------------------------------------------------------");
     } catch (error) {
       console.error("Error parsing WebSocket message:", error);
     }
