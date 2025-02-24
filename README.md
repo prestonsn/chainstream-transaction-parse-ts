@@ -10,8 +10,6 @@ Access to the ChainStream API. You can get access by signing up for a Syndica ac
 
 ## Setup
 
-1. **Set up your environment:**
-
 - Install the dependencies:
 ```sh
 npm install
@@ -25,13 +23,6 @@ TOKEN=your_syndica_api_key_here
 - OR, alternatively, you can set the `TOKEN` environment variable in your shell.
 ```sh
 export TOKEN=your_syndica_api_key_here
-```
-
-2. **Run the WebSocket client:**
-
-- Make sure your API key is correctly set up.
-```sh
-node src/wsClient.js
 ```
 
 ## Build and Run
