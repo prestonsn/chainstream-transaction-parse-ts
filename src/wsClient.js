@@ -82,6 +82,7 @@ ws_transactions.on("message", function incoming(data) {
                                         let v = rest[i];
                                         u64_amount += v * 2 ** (8 * i);
                                     }
+                                    // Print the transfer token and amount
                                     console.log(`  Transfer: ${dstToken === null || dstToken === void 0 ? void 0 : dstToken.mint}  amount: ${u64_amount}`);
                                 }
                             }
