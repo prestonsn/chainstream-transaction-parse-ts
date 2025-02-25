@@ -30,7 +30,7 @@ export TOKEN=your_syndica_api_key_here
 Compile the TypeScript code and start the WebSocket client:
 
 ```sh
-tsc && node src/wsClient.js
+tsc && node build/wsClient.js
 ```
 
 ## Notes
