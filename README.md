@@ -27,12 +27,18 @@ TOKEN=your_syndica_api_key_here
 export TOKEN=your_syndica_api_key_here
 ```
 
-## Build and Run
+## Build and Run Examples
 
-Compile the TypeScript code and start the WebSocket client:
+Compile the TypeScript code and start the WebSocket client to parse Raydium Transactions:
 
 ```sh
 tsc && node build/wsClient.js
+```
+
+Simple latency approximation example:
+
+```
+tsc && node build/latency.js
 ```
 
 ## Notes
