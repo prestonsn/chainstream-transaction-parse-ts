@@ -13,6 +13,8 @@ Access to the ChainStream API. You can get access by signing up for a Syndica ac
 - Install the dependencies:
 ```sh
 npm install
+npm install dotenv ws bs58
+npm install --save-dev @types/node @types/dotenv @types/ws
 ```
 
 - Create a new local `.env` file based on [`.env.template`](.env.template) and add your Syndica API key:
